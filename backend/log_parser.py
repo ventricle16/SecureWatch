@@ -1,17 +1,26 @@
 import re
 
-def parse_auth_log(log_line):
+def parse_auth_log(filepath):
 
-    pattern = r"Failed password for (\w+) from ([0-9.]+)"
+    failed_ips = {}
 
-    match = re.search(pattern, log_line)
+    with open(filepath, "r", errors="ignore") as logfile:
 
-    if match:
+        for line in logfile:
 
-        return {
-            "username": match.group(1),
-            "ip": match.group(2),
-            "event_type": "FAILED_LOGIN"
-        }
+            if "Failed password" in line:
 
-    return None
+                match = re.search(
+                    r"from (\d+\.\d+\.\d+\.\d+)",
+                    line
+                )
+
+                if match:
+
+                    ip = match.group(1)
+
+                    failed_ips[ip] = (
+                        failed_ips.get(ip, 0) + 1
+                    )
+
+    return failed_ips

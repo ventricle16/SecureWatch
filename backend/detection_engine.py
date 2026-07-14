@@ -1,21 +1,19 @@
-from collections import defaultdict
-
-def detect_bruteforce(events):
-
-    ip_count = defaultdict(int)
+def detect_bruteforce(failed_ips):
 
     alerts = []
 
-    for event in events:
+    if not failed_ips:
+        return alerts
 
-        ip_count[event["ip"]] += 1
+    for ip, count in failed_ips.items():
 
-        if ip_count[event["ip"]] >= 5:
+        if count >= 5:
 
             alerts.append({
-                "ip": event["ip"],
-                "severity": "HIGH",
-                "type": "BRUTE_FORCE"
+                "ip": ip,
+                "count": count,
+                "severity": "High",
+                "type": "Brute Force Attack"
             })
 
     return alerts
