@@ -25,6 +25,7 @@ body{
     border:none;
     border-radius:20px;
     color:white;
+    background:#0f172a;
     transition:.3s;
     box-shadow:0 8px 20px rgba(0,0,0,.25);
 }

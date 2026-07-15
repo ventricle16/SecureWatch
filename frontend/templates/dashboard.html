@@ -1,424 +1,216 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>SecureWatch SIEM Dashboard</title>
-
+    <title>SecureWatch SOC Console</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
 </head>
-
 <body>
-
 <nav class="navbar navbar-dark shadow-sm">
     <div class="container-fluid">
-
-        <span class="navbar-brand fw-bold fs-4">
-            🛡️ SecureWatch SIEM Dashboard
-        </span>
-
-        <span class="status-pill">
-            SOC Monitoring Active
-        </span>
-
+        <span class="navbar-brand fw-bold fs-4">🛡️ SecureWatch SOC Console</span>
+        <div class="d-flex align-items-center gap-2">
+            <span class="status-pill">SOC Monitoring Active</span>
+            <span class="badge bg-info text-dark">{{ current_user.username }}</span>
+            <a class="btn btn-outline-light btn-sm" href="/logout">Logout</a>
+        </div>
     </div>
 </nav>
-
-<div class="container mt-5">
-
-    <!-- STATISTICS -->
-
-    <div class="row">
-
-        <div class="col-lg-4 mb-4">
-
-            <div class="card stats-card events-card">
-
-                <div class="card-body">
-
-                    <h5>Total Events</h5>
-
-                    <h1 class="display-4 fw-bold">
-                        {{ total_events }}
-                    </h1>
-
-                </div>
-
-            </div>
-
+<div class="container-fluid px-4 py-4">
+    <div class="row g-4 mb-4">
+        <div class="col-lg-2 col-md-4 col-sm-6">
+            <div class="card stats-card events-card"><div class="card-body"><h6>Total Events</h6><h2 class="display-4 fw-bold">{{ total_events or 0 }}</h2></div></div>
         </div>
-
-        <div class="col-lg-4 mb-4">
-
-            <div class="card stats-card alerts-card">
-
-                <div class="card-body">
-
-                    <h5>Total Alerts</h5>
-
-                    <h1 class="display-4 fw-bold">
-                        {{ total_alerts }}
-                    </h1>
-
-                </div>
-
-            </div>
-
+        <div class="col-lg-2 col-md-4 col-sm-6">
+            <div class="card stats-card alerts-card"><div class="card-body"><h6>Total Alerts</h6><h2 class="display-4 fw-bold">{{ total_alerts or 0 }}</h2></div></div>
         </div>
-
-        <div class="col-lg-4 mb-4">
-
-            <div class="card stats-card high-alert-card">
-
-                <div class="card-body">
-
-                    <h5>High Severity Alerts</h5>
-
-                    <h1 class="display-4 fw-bold">
-
-                        {{ alerts
-                        |selectattr("severity","equalto","High")
-                        |list
-                        |length }}
-
-                    </h1>
-
-                </div>
-
-            </div>
-
+        <div class="col-lg-2 col-md-4 col-sm-6">
+            <div class="card stats-card high-alert-card"><div class="card-body"><h6>High Severity</h6><h2 class="display-4 fw-bold">{{ high_alerts or 0 }}</h2></div></div>
         </div>
-
+        <div class="col-lg-2 col-md-4 col-sm-6">
+            <div class="card stats-card"><div class="card-body"><h6>Active Incidents</h6><h2 class="display-4 fw-bold">{{ active_incidents or 0 }}</h2></div></div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6">
+            <div class="card stats-card"><div class="card-body"><h6>Contained</h6><h2 class="display-4 fw-bold">{{ contained_incidents or 0 }}</h2></div></div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6">
+            <div class="card stats-card"><div class="card-body"><h6>Closed</h6><h2 class="display-4 fw-bold">{{ closed_incidents or 0 }}</h2></div></div>
+        </div>
     </div>
 
-    <!-- UPLOAD -->
-
-    <div class="card dark-card mb-4">
-
-        <div class="card-body">
-
-            <h4 class="mb-3">
-                📂 Upload Security Log
-            </h4>
-
-            <form
-                action="/upload"
-                method="POST"
-                enctype="multipart/form-data">
-
-                <div class="input-group">
-
-                    <input
-                        type="file"
-                        class="form-control"
-                        name="file"
-                        required>
-
-                    <button
-                        type="submit"
-                        class="btn btn-success">
-
-                        Upload & Analyze
-
-                    </button>
-
+    <div class="row g-4 mb-4 align-items-stretch">
+        <div class="col-lg-4">
+            <div class="card dark-card h-100">
+                <div class="card-body">
+                    <h4 class="section-title">📂 Upload & Analyze</h4>
+                    <form action="/upload" method="POST" enctype="multipart/form-data">
+                        <div class="input-group">
+                            <input type="file" class="form-control" name="file" required>
+                            <button class="btn btn-success" type="submit">Analyze</button>
+                        </div>
+                    </form>
+                    <div class="mt-3">
+                        <a class="btn btn-outline-info btn-sm me-2" href="/incidents">Incident Center</a>
+                        <a class="btn btn-outline-light btn-sm me-2" href="/reports">Reports</a>
+                        {% if current_user.is_admin() %}<a class="btn btn-outline-warning btn-sm" href="/users">Users</a>{% endif %}
+                    </div>
                 </div>
-
-            </form>
-
+            </div>
         </div>
-
+        <div class="col-lg-8">
+            <div class="card dark-card h-100">
+                <div class="card-body">
+                    <h4 class="section-title">🧭 Live SOC Overview</h4>
+                    <p class="text-muted">Auto-refreshing dashboard feed with KPI cards, attack intelligence, and incident workflow.</p>
+                    <div class="row text-center">
+                        <div class="col-md-4"><div class="p-3 rounded bg-dark"><h5>{{ total_alerts }}</h5><small>Alerts</small></div></div>
+                        <div class="col-md-4"><div class="p-3 rounded bg-dark"><h5>{{ active_incidents }}</h5><small>Open Cases</small></div></div>
+                        <div class="col-md-4"><div class="p-3 rounded bg-dark"><h5>24/7</h5><small>Monitoring</small></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- ALERTS -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card dark-card h-100"><div class="card-body"><h3 class="section-title">📈 Alerts Over Time</h3><canvas id="alertsChart"></canvas></div></div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card dark-card h-100"><div class="card-body"><h3 class="section-title">📊 Severity Distribution</h3><canvas id="severityChart"></canvas></div></div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card dark-card h-100"><div class="card-body"><h3 class="section-title">🎯 MITRE ATT&CK Distribution</h3><canvas id="mitreChart"></canvas></div></div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card dark-card h-100"><div class="card-body"><h3 class="section-title">🌍 Top Attacking IPs</h3><canvas id="ipChart"></canvas></div></div>
+        </div>
+    </div>
 
     <div class="card dark-card mb-4">
-
         <div class="card-body">
-
-            <h2 class="section-title">
-                🚨 Recent Security Alerts
-            </h2>
-
+            <h2 class="section-title">🚨 Recent Security Alerts</h2>
             <div class="table-responsive">
-
                 <table class="table table-dark table-hover align-middle">
-
-                    <thead>
-
-                    <tr>
-                        <th>ID</th>
-                        <th>Severity</th>
-                        <th>Alert Type</th>
-                        <th>Source IP</th>
-                        <th>Description</th>
-                    </tr>
-
-                    </thead>
-
+                    <thead><tr><th>ID</th><th>Severity</th><th>Alert Type</th><th>Source IP</th><th>Status</th><th>MITRE</th></tr></thead>
                     <tbody>
-
                     {% if alerts %}
-
                         {% for alert in alerts %}
-
                         <tr>
-
-                            <td>{{ alert.id }}</td>
-
-                            <td>
-
-                                {% if alert.severity|lower == "high" %}
-                                <span class="badge bg-danger">
-                                    HIGH
-                                </span>
-
-                                {% elif alert.severity|lower == "medium" %}
-                                <span class="badge bg-warning text-dark">
-                                    MEDIUM
-                                </span>
-
-                                {% else %}
-                                <span class="badge bg-success">
-                                    LOW
-                                </span>
-                                {% endif %}
-
-                            </td>
-
+                            <td>#{{ alert.id }}</td>
+                            <td>{% if alert.severity|lower == 'high' %}<span class="badge bg-danger">HIGH</span>{% elif alert.severity|lower == 'medium' %}<span class="badge bg-warning text-dark">MEDIUM</span>{% else %}<span class="badge bg-success">LOW</span>{% endif %}</td>
                             <td>{{ alert.alert_type }}</td>
-
-                            <td>{{ alert.source_ip or "N/A" }}</td>
-
-                            <td>{{ alert.description }}</td>
-
+                            <td>{{ alert.source_ip or 'N/A' }}</td>
+                            <td>{{ alert.status }}</td>
+                            <td>{{ alert.mitre_technique }}</td>
                         </tr>
-
                         {% endfor %}
-
                     {% else %}
-
-                        <tr>
-
-                            <td colspan="5"
-                                class="text-center text-secondary">
-
-                                No alerts detected
-
-                            </td>
-
-                        </tr>
-
+                        <tr><td colspan="6" class="text-center text-secondary">No alerts detected</td></tr>
                     {% endif %}
-
                     </tbody>
-
                 </table>
-
             </div>
-
         </div>
-
     </div>
-
-    <!-- CHARTS -->
-
-    <div class="row mb-4">
-
-        <div class="col-lg-6 mb-4">
-
-            <div class="card dark-card h-100">
-
-                <div class="card-body">
-
-                    <h3 class="section-title">
-                        📈 Alerts Timeline
-                    </h3>
-
-                    <canvas id="alertsChart"></canvas>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="col-lg-6 mb-4">
-
-            <div class="card dark-card h-100">
-
-                <div class="card-body">
-
-                    <h3 class="section-title">
-                        🌍 Top Attacking IPs
-                    </h3>
-
-                    <canvas id="ipChart"></canvas>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- LOWER PANELS -->
-
-    <div class="row">
-
-        <div class="col-lg-6 mb-4">
-
-            <div class="card dark-card h-100">
-
-                <div class="card-body">
-
-                    <h2 class="section-title">
-                        📊 Attack Statistics
-                    </h2>
-
-                    <hr>
-
-                    <p>
-                        Total Alerts:
-                        <strong>{{ total_alerts }}</strong>
-                    </p>
-
-                    <p>
-                        Total Events:
-                        <strong>{{ total_events }}</strong>
-                    </p>
-
-                    <p>
-                        Detection Coverage:
-                        <strong>100%</strong>
-                    </p>
-
-                    <p>
-
-                        Threat Level:
-
-                        {% if total_alerts == 0 %}
-
-                        <span class="badge bg-success">
-                            LOW
-                        </span>
-
-                        {% elif total_alerts < 5 %}
-
-                        <span class="badge bg-warning text-dark">
-                            MEDIUM
-                        </span>
-
-                        {% else %}
-
-                        <span class="badge bg-danger">
-                            HIGH
-                        </span>
-
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="col-lg-6 mb-4">
-
-            <div class="card dark-card h-100">
-
-                <div class="card-body">
-
-                    <h2 class="section-title">
-                        🎯 SOC Status
-                    </h2>
-
-                    <hr>
-
-                    <p>
-                        Monitoring:
-                        <span class="badge bg-success">
-                            ACTIVE
-                        </span>
-                    </p>
-
-                    <p>
-                        Detection Engine:
-                        <span class="badge bg-info text-dark">
-                            RUNNING
-                        </span>
-                    </p>
-
-                    <p>
-                        SIEM Health:
-                        <span class="badge bg-success">
-                            HEALTHY
-                        </span>
-                    </p>
-
-                    <p>
-                        Last Scan:
-                        <span class="badge bg-primary">
-                            LIVE
-                        </span>
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
 </div>
-
-<footer class="text-center text-muted mt-5 mb-4">
-
-    <hr>
-
-    <p>SecureWatch SIEM v1.0</p>
-
-    <p>Security Monitoring • Threat Detection • Incident Response</p>
-
-    <p>Built by Niloy Sarkar</p>
-
-</footer>
-
+<footer class="text-center text-muted mt-5 mb-4"><hr><p>SecureWatch SIEM • Enterprise Edition</p><p>Threat Detection • Incident Response • MITRE ATT&CK</p></footer>
 <script>
+
+const alertLabels = {{ alert_ids|default([])|tojson }};
+const alertCounts = {{ alert_counts|default([])|tojson }};
 
 new Chart(document.getElementById('alertsChart'), {
     type: 'bar',
     data: {
-        labels: {{ alert_ids|tojson }},
+        labels: alertLabels,
         datasets: [{
             label: 'Alerts',
-            data: {{ alert_counts|tojson }},
-            backgroundColor: '#ef4444'
+            data: alertCounts,
+            backgroundColor: [
+                '#ef4444',
+                '#f97316',
+                '#eab308',
+                '#22c55e',
+                '#06b6d4'
+            ]
         }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                labels: {
+                    color: 'white'
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: {
+                    color: 'white'
+                }
+            },
+            y: {
+                ticks: {
+                    color: 'white'
+                }
+            }
+        }
     }
 });
 
+
+const severityLabels = Object.keys({{ severity_counts|default({})|tojson }});
+const severityValues = Object.values({{ severity_counts|default({})|tojson }});
+new Chart(document.getElementById('severityChart'), {
+    type: 'polarArea',
+    data: {
+        labels: severityLabels,
+        datasets: [{
+            data: severityValues,
+            backgroundColor: ['#ef4444', '#f59e0b', '#22c55e']
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { labels: { color: 'white' } } } }
+});
+
+const mitreLabels = Object.keys({{ mitre_counts|default({})|tojson }});
+const mitreValues = Object.values({{ mitre_counts|default({})|tojson }});
+new Chart(document.getElementById('mitreChart'), {
+    type: 'bar',
+    data: {
+        labels: mitreLabels,
+        datasets: [{
+            label: 'Detections',
+            data: mitreValues,
+            backgroundColor: ['#38bdf8', '#818cf8', '#f472b6']
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { labels: { color: 'white' } } }, scales: { x: { ticks: { color: 'white' } }, y: { ticks: { color: 'white' } } } }
+});
+
+const ipLabels = {{ ip_labels|default([])|tojson }};
+const ipValues = {{ ip_values|default([])|tojson }};
 new Chart(document.getElementById('ipChart'), {
     type: 'doughnut',
     data: {
-        labels: {{ top_ips.keys()|list|tojson }},
+        labels: ipLabels,
         datasets: [{
-            data: {{ top_ips.values()|list|tojson }}
+            data: ipValues,
+            backgroundColor: ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#8b5cf6', '#ec4899']
         }]
-    }
+    },
+    options: { responsive: true, plugins: { legend: { labels: { color: 'white' } } } }
 });
+
+setInterval(() => window.location.reload(), 10000);
 
 </script>
 

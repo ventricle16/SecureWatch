@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureWatch Incident Response Center</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<nav class="navbar navbar-dark border-bottom border-secondary shadow">
+    <div class="container-fluid">
+        <span class="navbar-brand fw-bold">🚨 SecureWatch Incident Response Center</span>
+        <a href="/" class="btn btn-outline-info">← Dashboard</a>
+    </div>
+</nav>
+<div class="container py-4">
+    <div class="row g-4 mb-4">
+        <div class="col-md-4"><div class="card stats-card alerts-card"><div class="card-body"><h5>Total Incidents</h5><h1 class="display-4 fw-bold">{{ alerts|length }}</h1></div></div></div>
+        <div class="col-md-4"><div class="card stats-card events-card"><div class="card-body"><h5>Open/Investigating</h5><h1 class="display-4 fw-bold">{{ alerts|selectattr('status','in',['OPEN','INVESTIGATING'])|list|length }}</h1></div></div></div>
+        <div class="col-md-4"><div class="card stats-card high-alert-card"><div class="card-body"><h5>High Severity</h5><h1 class="display-4 fw-bold">{{ alerts|selectattr('severity','equalto','High')|list|length }}</h1></div></div></div>
+    </div>
+    <div class="card dark-card">
+        <div class="card-body">
+            <h2 class="section-title mb-4">Incident Queue</h2>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle">
+                    <thead><tr><th>ID</th><th>Severity</th><th>Type</th><th>Source IP</th><th>Status</th><th>Workflow</th></tr></thead>
+                    <tbody>
+                    {% if alerts %}
+                        {% for alert in alerts %}
+                        <tr>
+                            <td>#{{ alert.id }}</td>
+                            <td>{% if alert.severity|lower == 'high' %}<span class="badge bg-danger">HIGH</span>{% elif alert.severity|lower == 'medium' %}<span class="badge bg-warning text-dark">MEDIUM</span>{% else %}<span class="badge bg-success">LOW</span>{% endif %}</td>
+                            <td>{{ alert.alert_type }}</td>
+                            <td>{{ alert.source_ip or 'N/A' }}</td>
+                            <td>{% if alert.status == 'OPEN' %}<span class="badge bg-danger">OPEN</span>{% elif alert.status == 'INVESTIGATING' %}<span class="badge bg-warning text-dark">INVESTIGATING</span>{% elif alert.status == 'CONTAINED' %}<span class="badge bg-info text-dark">CONTAINED</span>{% else %}<span class="badge bg-success">CLOSED</span>{% endif %}</td>
+                            <td>
+                                <div class="btn-group flex-wrap">
+                                    <a href="/incident/{{ alert.id }}/investigate" class="btn btn-sm btn-warning">Investigate</a>
+                                    <a href="/incident/{{ alert.id }}/contain" class="btn btn-sm btn-info">Contain</a>
+                                    <a href="/incident/{{ alert.id }}/close" class="btn btn-sm btn-success">Close</a>
+                                    <a href="/incident/{{ alert.id }}" class="btn btn-sm btn-outline-light">Details</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr><td colspan="6" class="text-center text-secondary">No incidents found.</td></tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<footer class="text-center text-muted mt-5 mb-4"><hr><p>SecureWatch SIEM Incident Response Module</p></footer>
+</body>
+</html>
